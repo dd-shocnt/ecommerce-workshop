@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: traffic
+  name: traffic
+spec:
+  containers:
+  - env:
+    - name: FRONTEND_HOST
+      value: frontend
+    - name: FRONTEND_PORT
+      value: "3000"
+    image: ddtraining/traffic-replay:latest
+    name: traffic
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always

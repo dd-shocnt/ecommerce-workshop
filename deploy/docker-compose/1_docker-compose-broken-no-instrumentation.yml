@@ -1,0 +1,55 @@
+version: '3'
+services:
+  discounts:
+    environment:
+      - FLASK_APP=discounts.py
+      - FLASK_DEBUG=1
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_HOST=db
+    image: "shocnt/discounts-service:latest"
+    command: flask run --port=5001 --host=0.0.0.0
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+  frontend:
+    environment:
+      - DB_USERNAME
+      - DB_PASSWORD
+      - PORT=8080
+      - ADS_PORT=5002
+      - DISCOUNTS_PORT=5001
+      - ADS_ROUTE=http://advertisements
+      - DISCOUNTS_ROUTE=http://discounts
+    image: "shocnt/store-frontend-broken-no-instrumentation:latest"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - discounts
+      - advertisements
+  advertisements:
+    environment:
+      - FLASK_APP=ads.py
+      - FLASK_DEBUG=1
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_HOST=db
+    image: "shocnt/ads-service:latest"
+    command: flask run --port=5002 --host=0.0.0.0
+    ports:
+      - "5002:5002"
+    depends_on:
+      - db
+  db:
+    image: postgres:11-alpine
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+  traffic-replay:
+    image: "ddtraining/traffic-replay:latest"
+    environment:
+     - FRONTEND_HOST=frontend
+     - FRONTEND_PORT=8080

@@ -3,6 +3,6 @@ services:
   traffic-replay:
     image: "ddtraining/traffic-replay:latest"
     environment:
-      - FRONTEND_HOST
-      - FRONTEND_PORT
+      - FRONTEND_HOST=localhost
+      - FRONTEND_PORT=8080
 

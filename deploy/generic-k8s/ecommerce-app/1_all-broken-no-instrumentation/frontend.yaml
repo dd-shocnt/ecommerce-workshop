@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ecommerce
+    service: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce
+      service: frontend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: ecommerce
+        service: frontend
+    spec:
+      containers:
+      - args:
+        - docker-entrypoint.sh
+        command:
+        - sh
+        env:
+          - name: DB_USERNAME
+            value: "postgres"
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: pw
+                name: db-password
+          - name: ADS_PORT
+            value: "5002"
+          - name: DISCOUNTS_PORT
+            value: "5001"
+          - name: ADS_ROUTE
+            value: "http://advertisements"
+          - name: DISCOUNTS_ROUTE
+            value: "http://discounts"
+        image: "shocnt/store-frontend-broken-no-instrumentation:latest"
+        imagePullPolicy: IfNotPresent
+        name: ecommerce-spree-observability
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ecommerce
+    service: frontend
+  name: frontend
+spec:
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+      name: http
+  selector:
+    app: ecommerce
+    service: frontend
+  type: ClusterIP
